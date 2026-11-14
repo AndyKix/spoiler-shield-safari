@@ -1,0 +1,11 @@
+<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="../../extension/content.css">
+<script>
+let notify;
+window.browser={storage:{local:{get:()=>new Promise((resolve,reject)=>setTimeout(()=>location.hash.startsWith('#race')?resolve({spoilerShieldTerms:['Minecraft'],spoilerShieldEnabled:location.hash!=='#race-disabled'}):reject(Error('denied')),30))},onChanged:{addListener:fn=>notify=fn}}};
+</script>
+<script src="../../extension/shared.js"></script><script src="../../extension/content.js"></script>
+<ytd-video-renderer id="card"><h3 id="video-title">GTA6 leaked</h3></ytd-video-renderer>
+<script>
+if(location.hash.startsWith('#race'))notify({spoilerShieldTerms:{newValue:['GTA6']}},'local');
+setTimeout(()=>{let out=document.createElement('pre');out.id='result';out.textContent=((getComputedStyle(document.querySelector('#card')).display==='none')!==(location.hash==='#race-disabled')?'PASS ':'FAIL ')+(location.hash.startsWith('#race')?'initial read merges newer terms and saved toggle':'storage error uses defaults');document.body.append(out);},80);
+</script>

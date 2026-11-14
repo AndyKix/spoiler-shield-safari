@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Spoiler Shield</title>
+    <link rel="stylesheet" href="../../extension/popup.css">
+  </head>
+  <body>
+    <main>
+      <header class="header">
+        <div class="app-icon" aria-hidden="true">
+          <svg viewBox="0 0 28 28" fill="none"><path d="M14 3.5 23 7v6.1c0 5.4-3.9 9.2-9 11.4-5.1-2.2-9-6-9-11.4V7l9-3.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m10 13.7 2.7 2.7 5.4-5.4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <p class="eyebrow">YOUTUBE</p>
+          <h1>Spoiler Shield</h1>
+        </div>
+      </header>
+
+      <div class="settings-card">
+      <label class="protection-card" for="enabled">
+        <span class="protection-copy">
+          <span class="row-title">Фильтр видео</span>
+          <span class="row-detail">По ключевым словам в заголовках</span>
+        </span>
+        <span class="switch">
+          <input id="enabled" type="checkbox" role="switch" disabled>
+          <span class="switch-track" aria-hidden="true"></span>
+        </span>
+      </label>
+      <label class="protection-card" for="hide-comments">
+        <span class="protection-copy">
+          <span class="row-title">Скрывать комментарии</span>
+          <span class="row-detail">Под видео и в Shorts</span>
+        </span>
+        <span class="switch">
+          <input id="hide-comments" type="checkbox" role="switch" disabled>
+          <span class="switch-track" aria-hidden="true"></span>
+        </span>
+      </label>
+      </div>
+
+      <section class="keywords" aria-labelledby="terms-label">
+        <div class="section-heading">
+          <label id="terms-label" for="terms">Ключевые слова</label>
+          <span class="section-hint" id="terms-hint">По одному на строку</span>
+        </div>
+        <div class="editor-card">
+          <textarea id="terms" rows="6" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="terms-hint terms-help" disabled></textarea>
+          <button id="reset" class="preset-button" type="button" disabled>
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.3 5.5A5.2 5.2 0 1 1 2.8 10M3.3 5.5V2.2m0 3.3h3.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Вернуть список GTA 6
+          </button>
+        </div>
+        <p class="help" id="terms-help">Видео с любым из этих слов будут скрыты. Регистр не имеет значения.</p>
+      </section>
+
+      <button id="save" class="save-button" type="button" disabled>Сохранить изменения</button>
+      <div id="status" role="status" aria-live="polite" aria-atomic="true"></div>
+
+      <footer class="privacy-note">
+        <svg viewBox="0 0 14 14" fill="none" aria-hidden="true"><rect x="3" y="6" width="8" height="6.5" rx="1.6" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 6V4a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Обработка на вашем устройстве
+      </footer>
+    </main>
+    <script>
+let saved={spoilerShieldTerms:['custom'],spoilerShieldEnabled:false};
+window.browser={storage:{local:{get:async()=>{if(location.hash==='#read-error')throw Error('load denied');return saved;},set:async(next)=>{if(location.hash==='#write-error')throw Error('save denied');saved=next;}}}};
+</script><script src="../../extension/shared.js"></script>
+    <script src="../../extension/popup.js"></script>
+  </body>
+</html>
+<script>
+(async()=>{
+ const tick=()=>new Promise(r=>setTimeout(r,0));await tick();
+ const editor=document.querySelector('#terms'),enabled=document.querySelector('#enabled'),save=document.querySelector('#save'),reset=document.querySelector('#reset'),status=document.querySelector('#status');
+ function ok(value,name){if(!value)throw Error(name);}
+ if(location.hash==='#read-error') {ok(editor.disabled&&save.disabled,'failed load blocks overwrite');ok(status.dataset.error==='true','load error shown');}
+ else {
+ ok(editor.value==='custom'&&!enabled.checked,'read saved settings');
+ ok(document.querySelector('#hide-comments').checked,'comments hidden by default after upgrade');document.querySelector('#hide-comments').checked=false;
+ editor.value='GTA 6\ngta 6\n\nMinecraft';enabled.checked=true;save.click();await tick();
+ if(location.hash==='#write-error'){ok(status.dataset.error==='true'&&!save.disabled,'save error and retry');ok(editor.value.includes('Minecraft'),'unsaved input retained');}
+ else {ok(saved.spoilerShieldTerms.length===2,'dedup saved terms');ok(saved.spoilerShieldEnabled,'save toggle');ok(saved.spoilerShieldHideComments===false,'save comments preference');reset.click();ok(editor.value.includes('ГТА6'),'reset GTA defaults');ok(saved.spoilerShieldTerms.length===2,'reset waits for save');}
+ }
+ let out=document.createElement('pre');out.id='result';out.textContent='PASS popup '+(location.hash||'normal');document.body.append(out);
+})().catch(e=>{let out=document.createElement('pre');out.id='result';out.textContent='FAIL '+e.stack;document.body.append(out);});
+</script>

@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Spoiler Shield",
+  "version": "1.3.0",
+  "description": "Скрывает видео YouTube по словам в заголовках.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://m.youtube.com/*",
+    "https://youtube.com/*"
+  ],
+  "action": {
+    "default_title": "Spoiler Shield",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*",
+        "https://m.youtube.com/*",
+        "https://youtube.com/*"
+      ],
+      "js": [
+        "shared.js",
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_start"
+    }
+  ]
+}

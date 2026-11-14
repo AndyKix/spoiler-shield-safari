@@ -1,0 +1,46 @@
+<!doctype html><meta charset="utf-8"><title>Fixture</title>
+<link rel="stylesheet" href="../../extension/content.css">
+<script>
+const handlers=[];
+let saved={spoilerShieldTerms:['GTA 6'],spoilerShieldEnabled:true};
+window.browser={storage:{local:{get:async()=>saved,set:async(next)=>{const changes={};for(const k in next)changes[k]={newValue:next[k]};Object.assign(saved,next);handlers.forEach(fn=>fn(changes,'local'));}},onChanged:{addListener:fn=>handlers.push(fn)}}};
+</script>
+<script src="../../extension/shared.js"></script>
+<script src="../../extension/content.js"></script>
+<ytd-comments id="comments">Comment spoiler</ytd-comments>
+<ytd-rich-item-renderer id="unsafe"><yt-lockup-view-model><h3 id="video-title">GTA 6 leaked</h3></yt-lockup-view-model></ytd-rich-item-renderer>
+<ytd-video-renderer id="safe"><a title="GTA 6 channel">channel</a><h3 id="video-title">Minecraft</h3></ytd-video-renderer>
+<ytd-video-renderer id="late"></ytd-video-renderer>
+<script>
+const checks=[];
+const tick=()=>new Promise(r=>setTimeout(r,0));
+function check(ok,name){if(!ok)throw new Error(name);checks.push(name);}
+function hidden(id){return getComputedStyle(document.getElementById(id)).display==='none';}
+(async()=>{
+ await tick();
+ check(hidden('unsafe'),'hide nested unsafe card');
+ check(hidden('comments'),'comments hidden by default');
+ check(!hidden('safe'),'ignore channel name');
+ check(getComputedStyle(document.querySelector('#late')).visibility==='hidden','pending video title masked');
+ check(getComputedStyle(document.querySelector('#unsafe yt-lockup-view-model')).visibility!=='hidden','nested card evaluated');
+ document.querySelector('#late').append(document.createTextNode(''));
+ let title=document.createElement('h3');title.id='video-title';title.textContent='GTA 6 ending';document.querySelector('#late').append(title);
+ await tick();check(hidden('late'),'late title insertion');
+ title.firstChild.data='Cooking';await tick();check(!hidden('late'),'text node mutation restores card');
+ title.setAttribute('title','GTA 6');await tick();check(hidden('late'),'title attribute mutation');
+ await browser.storage.local.set({spoilerShieldEnabled:false});await tick();check(!hidden('unsafe')&&!hidden('late'),'disable restores all');
+ check(hidden('comments'),'comments independent of video filter');
+ let comment=document.createElement('ytd-comment-thread-renderer');comment.id='dynamic-comment';comment.textContent='late spoiler';document.body.append(comment);await tick();check(hidden('dynamic-comment'),'dynamic comments hidden');
+ let panel=document.createElement('ytd-engagement-panel-section-list-renderer');panel.id='shorts-comments';panel.setAttribute('target-id','engagement-panel-comments-section');document.body.append(panel);await tick();check(hidden('shorts-comments'),'shorts comments panel hidden');
+ let otherPanel=document.createElement('ytd-engagement-panel-section-list-renderer');otherPanel.id='other-panel';otherPanel.setAttribute('target-id','engagement-panel-transcript');document.body.append(otherPanel);await tick();check(!hidden('other-panel'),'unrelated panels remain visible');
+ await browser.storage.local.set({spoilerShieldHideComments:false});await tick();check(!hidden('comments')&&!hidden('dynamic-comment')&&!hidden('shorts-comments'),'show comments live');
+ await browser.storage.local.set({spoilerShieldHideComments:true});await tick();check(hidden('comments')&&hidden('dynamic-comment'),'hide comments live');
+ await browser.storage.local.set({spoilerShieldEnabled:true,spoilerShieldTerms:[]});await tick();check(!hidden('unsafe'),'empty list restores all');
+ let emptyCard=document.createElement('ytd-video-renderer');document.body.append(emptyCard);await tick();check(getComputedStyle(emptyCard).visibility!=='hidden','empty filter leaves untitled cards visible');emptyCard.remove();
+ await browser.storage.local.set({spoilerShieldTerms:['GTA 6']});await tick();check(hidden('unsafe'),'live settings update');
+ let c=document.createElement('ytd-video-renderer');c.id='added';c.innerHTML='<h3 id="video-title">GTA 6 trailer</h3>';document.body.append(c);await tick();check(hidden('added'),'new infinite-scroll card');
+ c.remove();document.dispatchEvent(new Event('yt-navigate-finish'));await tick();check(hidden('unsafe'),'SPA navigation');
+ let shorts=document.createElement('ytm-shorts-lockup-view-model');shorts.id='short';shorts.innerHTML='<h3 class="shortsLockupViewModelHostMetadataTitle">GTA 6 shorts</h3>';document.body.append(shorts);await tick();check(hidden('short'),'modern shorts');
+ const out=document.createElement('pre');out.id='result';out.textContent='PASS '+checks.length+' DOM checks: '+checks.join('; ');document.body.append(out);
+})().catch(e=>{let out=document.createElement('pre');out.id='result';out.textContent='FAIL '+e.stack;document.body.append(out);});
+</script>
